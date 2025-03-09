@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:async';
 import 'dart:io';
+import 'homepage.dart';
 
 class EventFormScreen extends StatefulWidget {
   @override
@@ -16,6 +18,8 @@ class _EventFormScreenState extends State<EventFormScreen> {
 
   String? userId;
   String? posterUrl;
+  String? profilePhoto, username, oneLine;
+  int _currentIndex = 0; // Track the selected index for the bottom navigation bar
 
   final TextEditingController _eventNameController = TextEditingController();
   final TextEditingController _venueController = TextEditingController();
@@ -30,6 +34,7 @@ class _EventFormScreenState extends State<EventFormScreen> {
   void initState() {
     super.initState();
     _fetchUserId();
+    fetchUserData();
   }
 
   Future<void> _fetchUserId() async {
@@ -39,6 +44,27 @@ class _EventFormScreenState extends State<EventFormScreen> {
         userId = session.user.id;
       });
     }
+  }
+
+  Future<void> fetchUserData() async {
+    final user = supabase.auth.currentUser; // Get the signed-in user
+
+    if (user == null) {
+      print("No user signed in");
+      return;
+    }
+
+    final response = await supabase
+        .from('users')
+        .select('profile_photo, username, one_line')
+        .eq('id', user.id) // Use the user's ID instead of email
+        .single();
+
+    setState(() {
+      profilePhoto = response['profile_photo'];
+      username = response['username'];
+      oneLine = response['one_line'];
+    });
   }
 
   Future<void> _pickDateTime(bool isStart) async {
@@ -151,7 +177,51 @@ class _EventFormScreenState extends State<EventFormScreen> {
         ),
       ),
       child: Scaffold(
-        appBar: AppBar(title: Text('Create Event')),
+        appBar: AppBar(
+          automaticallyImplyLeading: false, // Remove the back button
+          title: Row(
+            children: [
+              CircleAvatar(
+                backgroundImage: profilePhoto != null
+                    ? NetworkImage(profilePhoto!)
+                    : const AssetImage('assets/default_avatar.png') as ImageProvider,
+              ),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(username ?? 'Loading...', style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text(oneLine ?? 'Loading...', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                ],
+              )
+            ],
+          ),
+          actions: [
+            Transform.translate(
+              offset: const Offset(-10, 0), // Move left by 10 pixels
+              child: Stack(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.mail, size: 36),
+                    onPressed: () {},
+                  ),
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Container(
+                      padding: const EdgeInsets.all(5),
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Text('3', style: TextStyle(color: Colors.white, fontSize: 12)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
         body: Padding(
           padding: EdgeInsets.all(16.0),
           child: Form(
@@ -241,12 +311,54 @@ class _EventFormScreenState extends State<EventFormScreen> {
 
                   ElevatedButton(
                     onPressed: _submitEvent,
-                    child: Text('Submit Event'),
+                    child: Text('Create Event'),
                   ),
                 ],
               ),
             ),
           ),
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed, // Ensures equal spacing
+          showSelectedLabels: false, // Hide labels
+          showUnselectedLabels: false, // Hide labels
+          currentIndex: _currentIndex, // Set the current index
+          onTap: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+
+            // Handle navigation based on the tapped index
+            if (index == 0) { // Index 0 corresponds to the "Home" button
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => HomeScreen()), // Navigate to HomeScreen
+              );
+            } else if (index == 2) { // Index 2 corresponds to the "Add" button
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => EventFormScreen()),
+              );
+            }
+          },
+          items: [
+            BottomNavigationBarItem(
+              icon: SvgPicture.asset('assets/icons/home-un.svg', width: 30),
+              label: '',
+            ),
+            BottomNavigationBarItem(
+              icon: SvgPicture.asset('assets/icons/search.svg', width: 30),
+              label: '',
+            ),
+            BottomNavigationBarItem(
+              icon: SvgPicture.asset('assets/icons/add-sel.svg', width: 40),
+              label: '',
+            ),
+            BottomNavigationBarItem(
+              icon: SvgPicture.asset('assets/icons/profile.svg', width: 30),
+              label: '',
+            ),
+          ],
         ),
       ),
     );
