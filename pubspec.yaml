@@ -65,7 +65,8 @@ flutter:
     - assets/icons/search.svg
     - assets/icons/add.svg
     - assets/icons/profile.svg
-
+    - assets/icons/home-un.svg
+    - assets/icons/add-sel.svg
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
