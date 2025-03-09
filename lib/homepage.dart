@@ -4,7 +4,6 @@ import 'dart:async';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'addevent.dart';
 
-
 class HomeScreen extends StatefulWidget {
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -45,7 +44,18 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> fetchEvents() async {
-    final response = await supabase.from('events').select('poster, event_name, description');
+    final user = supabase.auth.currentUser; // Get the signed-in user
+
+    if (user == null) {
+      print("No user signed in");
+      return;
+    }
+
+    final response = await supabase
+        .from('events')
+        .select('poster, event_name, description')
+        .eq('created_by', user.id); // Filter events by the user's ID
+
     setState(() {
       events = List<Map<String, dynamic>>.from(response);
     });
