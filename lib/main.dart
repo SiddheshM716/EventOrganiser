@@ -17,7 +17,17 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Supabase Auth',
-      theme: ThemeData(primarySwatch: Colors.blue),
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        textTheme: const TextTheme(
+          bodyLarge: TextStyle(fontFamily: 'Montserrat'),
+          bodyMedium: TextStyle(fontFamily: 'Montserrat'),
+          bodySmall: TextStyle(fontFamily: 'Montserrat'),
+          titleLarge: TextStyle(fontFamily: 'Montserrat'),
+          titleMedium: TextStyle(fontFamily: 'Montserrat'),
+          titleSmall: TextStyle(fontFamily: 'Montserrat'),
+        ),
+      ),
       home: AuthCheck(), // Check session on startup
     );
   }
